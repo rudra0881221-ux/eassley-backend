@@ -42,8 +42,22 @@ const pgPool = new Pool({
 });
 
 // Redis Cloud Production Clients (Connects to Upstash Serverless Redis)
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-const redisSubscriber = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+// Upstash requires TLS (rediss://) and benefits from explicit retry/backoff settings
+// so the connection doesn't get dropped and endlessly retried (ECONNRESET loops).
+const redisOptions = {
+    maxRetriesPerRequest: 3,
+    retryStrategy(times) {
+        const delay = Math.min(times * 200, 2000);
+        return delay;
+    },
+    tls: process.env.REDIS_URL && process.env.REDIS_URL.startsWith('rediss://') ? {} : undefined,
+};
+
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', redisOptions);
+const redisSubscriber = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', redisOptions);
+
+redis.on('error', (err) => console.error('[Redis Client Error]', err.message));
+redisSubscriber.on('error', (err) => console.error('[Redis Subscriber Error]', err.message));
 
 // Configure Redis to emit keyspace events for expired keys (Ex)
 redis.config('SET', 'notify-keyspace-events', 'Ex').catch(err => {
