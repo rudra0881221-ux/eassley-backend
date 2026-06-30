@@ -1,0 +1,18 @@
+{
+  "name": "eassley-backend",
+  "version": "1.0.0",
+  "description": "Eassley O2O hyperlocal marketplace backend",
+  "main": "backend_production_server.js",
+  "scripts": {
+    "start": "node backend_production_server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "pg": "^8.12.0",
+    "ioredis": "^5.4.1"
+  }
+}
